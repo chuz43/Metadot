@@ -37,11 +37,31 @@
 <body>
     <iframe id="framerContent" src="https://metadotapp.framer.website/" allowfullscreen allow="geolocation; camera; microphone; storage-access"></iframe>
    <script>
+    let lastContentHash = '';
+
+    // Function to compute a simple hash of the iframe content
+    function computeIframeContentHash() {
+        const iframe = document.getElementById('framerContent');
+        return iframe.contentWindow.location.href;
+    }
+
+    // Function to check for changes in the iframe content
+    function checkIframeContentChange() {
+        const currentHash = computeIframeContentHash();
+        if (currentHash !== lastContentHash) {
+            lastContentHash = currentHash;
+            if (confirm('New content is available. Refresh now?')) {
+                window.location.reload();
+            }
+        }
+    }
+
     // Function to send message to iframe
     function sendMessageToIframe(message) {
         const iframe = document.getElementById('framerContent');
         iframe.contentWindow.postMessage(message, 'https://metadotapp.framer.website/');
     }
+
     // Listen for messages from iframe
     window.addEventListener('message', function(event) {
         if (event.origin !== "https://metadotapp.framer.website/") return;
@@ -56,6 +76,7 @@
             });
         }
     }, false);
+
     // Attempt to restore the session when the page loads
     window.addEventListener('load', function() {
         const sessionData = localStorage.getItem('sessionData');
@@ -65,7 +86,14 @@
                 sessionData: JSON.parse(sessionData)
             });
         }
+
+        // Initialize lastContentHash
+        lastContentHash = computeIframeContentHash();
+
+        // Check for iframe content changes periodically
+        setInterval(checkIframeContentChange, 60000); // Check every minute
     });
+
     // Handle 'visibilitychange' event for iOS devices
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
@@ -77,10 +105,13 @@
                     sessionData: JSON.parse(sessionData)
                 });
             }
+            // Check for iframe content changes
+            checkIframeContentChange();
         }
     });
 
     // Register Service Worker
+    let refreshing = false;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js').then(function(registration) {
@@ -93,7 +124,7 @@
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             // New content is available, show a notification or refresh the page
-                            if (confirm('New content is available. Refresh now?')) {
+                            if (confirm('New local content is available. Refresh now?')) {
                                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                                 window.location.reload();
                             }
