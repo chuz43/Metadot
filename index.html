@@ -32,59 +32,44 @@
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
-        /* Hide scrollbars but keep scroll functionality */
-        * {
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-        }
-
-        *::-webkit-scrollbar {
-            display: none !important;
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-
-        /* Ensure body can scroll if necessary */
-        html, body {
-            overflow: auto;
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Helper class for elements that need scroll */
-        .scroll-content {
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-        }
     </style>
 </head>
 <body>
     <iframe id="framerContent" src="https://metadotapp.framer.website/" allowfullscreen allow="geolocation; camera; microphone; storage-access"></iframe>
-    <script>
-        // Function to send message to iframe
-        function sendMessageToIframe(message) {
-            const iframe = document.getElementById('framerContent');
-            iframe.contentWindow.postMessage(message, 'https://metadotapp.framer.website/');
+   <script>
+    // Function to send message to iframe
+    function sendMessageToIframe(message) {
+        const iframe = document.getElementById('framerContent');
+        iframe.contentWindow.postMessage(message, 'https://metadotapp.framer.website/');
+    }
+    // Listen for messages from iframe
+    window.addEventListener('message', function(event) {
+        if (event.origin !== "https://metadotapp.framer.website/") return;
+        
+        if (event.data.type === 'setSessionData') {
+            localStorage.setItem('sessionData', JSON.stringify(event.data.sessionData));
+        } else if (event.data.type === 'getSessionData') {
+            const sessionData = localStorage.getItem('sessionData');
+            sendMessageToIframe({
+                type: 'sessionDataResponse',
+                sessionData: sessionData ? JSON.parse(sessionData) : null
+            });
         }
-        // Listen for messages from iframe
-        window.addEventListener('message', function(event) {
-            if (event.origin !== "https://metadotapp.framer.website/") return;
-            
-            if (event.data.type === 'setSessionData') {
-                localStorage.setItem('sessionData', JSON.stringify(event.data.sessionData));
-            } else if (event.data.type === 'getSessionData') {
-                const sessionData = localStorage.getItem('sessionData');
-                sendMessageToIframe({
-                    type: 'sessionDataResponse',
-                    sessionData: sessionData ? JSON.parse(sessionData) : null
-                });
-            }
-        }, false);
-        // Attempt to restore the session when the page loads
-        window.addEventListener('load', function() {
+    }, false);
+    // Attempt to restore the session when the page loads
+    window.addEventListener('load', function() {
+        const sessionData = localStorage.getItem('sessionData');
+        if (sessionData) {
+            sendMessageToIframe({
+                type: 'restoreSession',
+                sessionData: JSON.parse(sessionData)
+            });
+        }
+    });
+    // Handle 'visibilitychange' event for iOS devices
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // The app has become visible, attempt to restore the session
             const sessionData = localStorage.getItem('sessionData');
             if (sessionData) {
                 sendMessageToIframe({
@@ -92,41 +77,8 @@
                     sessionData: JSON.parse(sessionData)
                 });
             }
-        });
-        // Handle 'visibilitychange' event for iOS devices
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                // The app has become visible, attempt to restore the session
-                const sessionData = localStorage.getItem('sessionData');
-                if (sessionData) {
-                    sendMessageToIframe({
-                        type: 'restoreSession',
-                        sessionData: JSON.parse(sessionData)
-                    });
-                }
-            }
-        });
-
-        // Function to apply styles to dynamic elements
-        function hideScrollbars(element) {
-            element.style.scrollbarWidth = 'none';
-            element.style.msOverflowStyle = 'none';
         }
-
-        // Apply to existing elements
-        document.querySelectorAll('*').forEach(hideScrollbars);
-
-        // Observe DOM changes and apply styles to new elements
-        new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { // It's an element
-                        hideScrollbars(node);
-                        node.querySelectorAll('*').forEach(hideScrollbars);
-                    }
-                });
-            });
-        }).observe(document.body, { childList: true, subtree: true });
-    </script>
+    });
+</script>
 </body>
 </html>
