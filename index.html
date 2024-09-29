@@ -2,28 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Metadot</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="/Metadot/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/Metadot/icon-512x512.png">
     <link rel="apple-touch-icon" href="/Metadot/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Metadot">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
-            background-color: #000000;
+            background-color: transparent;
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+        #content {
             position: fixed;
             top: 0;
             left: 0;
@@ -31,11 +28,19 @@
             bottom: 0;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            background-color: #000000; /* or any color that matches your app's theme */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <iframe id="framerContent" src="https://metadotapp.framer.website/" allowfullscreen allow="geolocation; camera; microphone; storage-access"></iframe>
+    <div id="content">
+        <iframe id="framerContent" src="https://metadotapp.framer.website/" allowfullscreen allow="geolocation; camera; microphone; storage-access"></iframe>
+    </div>
    <script>
     // Function to send message to iframe
     function sendMessageToIframe(message) {
